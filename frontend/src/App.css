@@ -1,0 +1,16 @@
+/* App.css */
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f4f6f8;
+}
+
+button {
+  background-color: #2196F3;
+  color: white;
+}
+
+input, button {
+  border-radius: 5px;
+}
