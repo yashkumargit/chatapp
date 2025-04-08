@@ -2,12 +2,28 @@ const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema(
   {
-    room: { type: String, required: true }, // Room ID
-    sender: { type: String, required: true }, // Sender name or ID
-    message: { type: String, required: true }, // Message content
-    timestamp: { type: Date, default: Date.now }, // Auto timestamp
+    room: {
+      type: String,
+      required: true,
+      index: true, // 🔍 Optimizes room-based queries
+    },
+    sender: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { collection: "messages" }
+  {
+    collection: "messages",
+    timestamps: true, // ⏱ Adds createdAt and updatedAt automatically
+  }
 );
 
 module.exports = mongoose.model("Message", messageSchema);

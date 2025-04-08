@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Paper, IconButton, Typography } from "@mui/material";
+import { Box, TextField, Paper, IconButton } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { useNavigate } from "react-router-dom";
 import { useChat } from "../context/ChatContext";
 import io from "socket.io-client";
 import MessageList from "./MessageList";
 
-const socket = io.connect("http://localhost:3001");
+// Establish socket connection only once
+const socket = io("http://localhost:3001", {
+  auth: {
+    token: localStorage.getItem("token"),
+  },
+});
 
 const Chat = () => {
   const { username, room, onlineUsers, setOnlineUsers } = useChat();
@@ -20,36 +25,40 @@ const Chat = () => {
       return;
     }
 
-    // 🔹 Send correct username & room data
     socket.emit("join_room", { username, room });
 
     socket.on("receive_message", (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]); // 🔥 Append only new message
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
-    // 🔥 Listen for online users
     socket.on("update_online_users", (users) => {
       setOnlineUsers(users);
+    });
+
+    // Optional: Handle disconnection
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server");
     });
 
     return () => {
       socket.off("receive_message");
       socket.off("update_online_users");
+      socket.off("disconnect");
     };
-  }, [username, room, navigate]);
+  }, [username, room, navigate, setOnlineUsers]);
 
   const sendMessage = () => {
-    if (message.trim() !== "") {
-      const messageData = {
-        room,
-        author: username,
-        message,
-        time: new Date().toLocaleTimeString().slice(0, 5),
-      };
+    if (message.trim() === "") return;
 
-      socket.emit("send_message", messageData); // 🔥 Send to backend
-      setMessage(""); // Clear input
-    }
+    const messageData = {
+      room,
+      author: username,
+      message,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    socket.emit("send_message", messageData);
+    setMessage("");
   };
 
   return (
@@ -75,29 +84,29 @@ const Chat = () => {
           boxShadow: 3,
         }}
       >
-        {/* Header - Room Info & Online Users */}
+        {/* Header */}
         <Paper
           sx={{
             padding: "10px",
-            textAlign: "center",
             fontSize: "18px",
             fontWeight: "bold",
             backgroundColor: "#128C7E",
             color: "white",
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <span>Room: {room}</span>
-          <span>🟢 {onlineUsers.length} Online</span> {/* 🔥 Display Online Users */}
+          <span>🟢 {onlineUsers.length} Online</span>
         </Paper>
 
-        {/* Message List */}
+        {/* Message list */}
         <Box sx={{ flex: 1, overflowY: "auto", padding: "10px" }}>
           <MessageList messages={messages} username={username} />
         </Box>
 
-        {/* Message Input */}
+        {/* Input area */}
         <Paper
           sx={{
             display: "flex",
@@ -115,7 +124,7 @@ const Chat = () => {
             size="small"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             sx={{
               "& fieldset": { border: "none" },
               backgroundColor: "#F8F8F8",
