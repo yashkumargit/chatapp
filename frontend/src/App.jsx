@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login';
 import Chat from './components/Chat';
 import { ChatProvider } from './context/ChatContext';
-
+import LogRocket from 'logrocket';
+LogRocket.init('ean1aw/chatapp');
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("token");
 

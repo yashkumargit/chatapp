@@ -3,6 +3,7 @@ import { TextField, Button, Paper, Typography } from '@mui/material';
 import { useChat } from '../context/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LogRocket from 'logrocket'; // ✅ Import LogRocket
 
 const Login = () => {
   const { setUsername, setRoom } = useChat();
@@ -24,9 +25,17 @@ const Login = () => {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", username);
+      localStorage.setItem("room", room); // ✅ store room for session restore
 
       setUsername(username);
       setRoom(room);
+
+      // ✅ Identify the user for LogRocket
+      LogRocket.identify(username, {
+        name: username,
+        room: room,
+      });
+
       navigate("/chat");
     } catch (err) {
       console.error("Auth Error:", err.response?.data || err.message);
